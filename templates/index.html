@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TransVid Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.6.1/socket.io.min.js"></script>
+</head>
+<body>
+<div class="container">
+    <h1>🎧 TransVid Pro</h1>
+    <p>Traduisez et doublez vos vidéos YouTube automatiquement en français.</p>
+
+    <form id="videoForm">
+        <input type="text" name="youtube_url" placeholder="Entrez l’URL YouTube ici" required>
+        <button type="submit">Lancer la traduction & doublage</button>
+    </form>
+
+    <div id="logs" class="logs"></div>
+
+    <div id="progressBarContainer">
+        <div id="progressBar"></div>
+    </div>
+
+    <div id="downloadLink" class="download"></div>
+</div>
+
+<script>
+const socket = io();
+const form = document.getElementById("videoForm");
+const logs = document.getElementById("logs");
+const progressBar = document.getElementById("progressBar");
+const downloadLink = document.getElementById("downloadLink");
+
+form.addEventListener("submit", e=>{
+    e.preventDefault();
+    downloadLink.innerHTML = "";
+    logs.innerHTML = "";
+    progressBar.style.width = "0%";
+    fetch("/process_video", {method:"POST", body:new FormData(form)});
+});
+
+socket.on("log", msg=>{
+    logs.innerHTML += `<div class="log">${msg}</div>`;
+    logs.scrollTop = logs.scrollHeight;
+});
+
+socket.on("progress", data=>{
+    let percent = Math.round(data.current/data.total*100);
+    progressBar.style.width = percent + "%";
+    logs.innerHTML += `<div class="log">🔹 ${data.step} : ${data.current}/${data.total}</div>`;
+    logs.scrollTop = logs.scrollHeight;
+});
+
+socket.on("finished", data=>{
+    downloadLink.innerHTML = `<a href="/translated_videos/${data.video_file}" class="btn">Télécharger la vidéo doublée</a>`;
+    logs.innerHTML += `<div class="log success">✅ Traitement terminé !</div>`;
+});
+
+socket.on("error", msg=>{
+    logs.innerHTML += `<div class="log error">⚠️ Erreur : ${msg}</div>`;
+});
+</script>
+</body>
+</html>
