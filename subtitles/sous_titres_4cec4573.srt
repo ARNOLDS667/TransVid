@@ -1,0 +1,476 @@
+1
+00:00:00,000 --> 00:00:02,480
+C'est du CSS en seulement cinq minutes.
+
+2
+00:00:02,480 --> 00:00:05,040
+Je vais expliquer CSS comment je le comprends,
+
+3
+00:00:05,040 --> 00:00:08,240
+dans les parties que j'utilise le plus en tant que développeur full stack.
+
+4
+00:00:08,240 --> 00:00:12,000
+Vous pouvez écrire du CSS directement en HTML comme ceci ou ceci,
+
+5
+00:00:12,000 --> 00:00:14,800
+mais il est préférable d'utiliser un fichier CSS.
+
+6
+00:00:14,800 --> 00:00:17,120
+CSS n'a que deux éléments simples,
+
+7
+00:00:17,120 --> 00:00:18,800
+sélecteurs et attributs.
+
+8
+00:00:18,800 --> 00:00:20,560
+Les sélecteurs disent, hé,
+
+9
+00:00:20,560 --> 00:00:23,440
+recherchez dans mon code HTML les éléments qui correspondent à cela.
+
+10
+00:00:23,440 --> 00:00:25,040
+Vous pouvez sélectionner par élément,
+
+11
+00:00:25,040 --> 00:00:27,760
+comme H1, les classes avec un point,
+
+12
+00:00:28,000 --> 00:00:31,440
+un identifiant avec un hachage ou une chaîne multiple.
+
+13
+00:00:31,440 --> 00:00:35,040
+Chaîner avec une virgule signifie simplement sélectionner ceci et cela.
+
+14
+00:00:35,040 --> 00:00:38,720
+La syntaxe spatiale signifie à l'intérieur de la carotte,
+
+15
+00:00:38,720 --> 00:00:39,920
+sélectionne un niveau de profondeur,
+
+16
+00:00:39,920 --> 00:00:43,120
+c'est-à-dire des en-têtes à un seul niveau au plus profond de cette classe.
+
+17
+00:00:43,120 --> 00:00:45,440
+Garder vos sélecteurs aussi simples que possible,
+
+18
+00:00:45,440 --> 00:00:48,160
+comme un nom de classe unique ou le meilleur des cas.
+
+19
+00:00:49,040 --> 00:00:50,400
+Une fois que vous avez sélectionné les choses,
+
+20
+00:00:50,400 --> 00:00:51,840
+vous devez ajouter quelques attributs.
+
+21
+00:00:51,840 --> 00:00:54,080
+Désormais, les attributs sont les styles réels que nous appliquons,
+
+22
+00:00:54,080 --> 00:00:57,440
+et ces styles sont appliqués de haut en bas de votre fichier CSS.
+
+23
+00:00:58,080 --> 00:01:01,760
+Ce n’est pas si simple, car que se passe-t-il si nous avons deux styles contradictoires ?
+
+24
+00:01:01,760 --> 00:01:04,720
+Eh bien, pour résoudre ce problème, il y a quelque chose qui s'appelle la spécificité.
+
+25
+00:01:04,720 --> 00:01:06,800
+Des sélecteurs plus spécifiques obtiennent des priorités,
+
+26
+00:01:06,800 --> 00:01:10,720
+cela va donc de l'ID à une classe, jusqu'aux éléments généraux.
+
+27
+00:01:10,720 --> 00:01:12,080
+Lorsque vous enchaînez des sélecteurs ensemble,
+
+28
+00:01:12,080 --> 00:01:13,920
+ça devient vraiment compliqué,
+
+29
+00:01:13,920 --> 00:01:15,520
+mais vous en aurez une idée avec le temps.
+
+30
+00:01:16,320 --> 00:01:17,759
+Il y a deux très grandes catégories,
+
+31
+00:01:17,759 --> 00:01:21,039
+couleur et mise en page, puis une tonne de propriétés aléatoires différentes.
+
+32
+00:01:21,039 --> 00:01:24,080
+Deux éléments courants sur lesquels nous définissons la couleur sont les arrière-plans et le texte.
+
+33
+00:01:24,960 --> 00:01:26,080
+Nous utilisons l'arrière-plan,
+
+34
+00:01:26,080 --> 00:01:28,080
+couleur du trait d'union et touches de couleur,
+
+35
+00:01:28,080 --> 00:01:30,880
+respectivement, puis remplissez les valeurs d'attribut,
+
+36
+00:01:30,880 --> 00:01:33,360
+comme le rouge, le bleuet, le bleu ou le bleu ciel.
+
+37
+00:01:33,360 --> 00:01:35,360
+Ces mots en couleurs sont faciles à lire, mais limités,
+
+38
+00:01:35,360 --> 00:01:37,360
+donc plus souvent, vous utiliserez un code hexadécimal.
+
+39
+00:01:37,759 --> 00:01:39,520
+Vous pouvez trouver des couleurs que vous aimez sur Internet,
+
+40
+00:01:39,520 --> 00:01:41,920
+puis récupérez l'hexagone avec une extension de sélecteur de couleurs.
+
+41
+00:01:42,640 --> 00:01:45,920
+Passons maintenant aux attributs de mise en page, qui sont tous basés sur le modèle de boîte.
+
+42
+00:01:46,160 --> 00:01:48,160
+Tout est une boîte à l’intérieur d’une boîte.
+
+43
+00:01:48,160 --> 00:01:51,120
+Chaque boîte est composée de contenu, de remplissage, de bordure et de marge.
+
+44
+00:01:51,840 --> 00:01:54,240
+Je vais définir quelques valeurs pour ceux-ci, puis les expliquer.
+
+45
+00:01:54,560 --> 00:01:56,880
+Nous pouvons voir le modèle de boîte dans Chrome sur n'importe quelle page,
+
+46
+00:01:57,440 --> 00:02:00,720
+ce qui nous permet de vérifier les valeurs et de déboguer si les choses sont bizarres.
+
+47
+00:02:01,520 --> 00:02:05,360
+La partie bleue est le contenu, que nous définissons en CSS comme largeur et hauteur.
+
+48
+00:02:06,080 --> 00:02:09,520
+Il est préférable de définir la largeur et la hauteur W sous forme de pourcentages du conteneur parent.
+
+49
+00:02:09,920 --> 00:02:13,280
+Sinon, tout se gâte et peut sortir des limites.
+
+50
+00:02:14,240 --> 00:02:19,360
+Vous pouvez positionner les éléments dans cette zone de contenu bleue avec le texte aligné au centre, à gauche ou à droite.
+
+51
+00:02:20,080 --> 00:02:24,560
+L'attribut padding peut décourager les gens car vous pouvez écrire une, deux ou quatre valeurs.
+
+52
+00:02:24,960 --> 00:02:28,240
+C'est parce que vous pouvez définir individuellement le haut, la droite, le bas et la gauche,
+
+53
+00:02:28,240 --> 00:02:32,000
+ou en haut et en bas, à gauche et à droite, ou sur les quatre côtés.
+
+54
+00:02:32,320 --> 00:02:34,400
+Si vous en écrivez quatre, n'oubliez pas d'aller dans le sens des aiguilles d'une montre.
+
+55
+00:02:34,400 --> 00:02:36,640
+D'abord en haut, puis à droite, en bas et à gauche.
+
+56
+00:02:36,640 --> 00:02:39,200
+Vous pouvez également mettre de côté individuellement, comme ça.
+
+57
+00:02:39,200 --> 00:02:41,280
+Argin en haut, rembourrage à gauche, vous comprenez.
+
+58
+00:02:41,280 --> 00:02:44,640
+Il est important de savoir que la couleur d'arrière-plan de vos éléments sera appliquée au remplissage,
+
+59
+00:02:44,640 --> 00:02:45,760
+mais pas de bordure ou de marge.
+
+60
+00:02:45,760 --> 00:02:49,280
+Nous avons défini ce remplissage avec des valeurs de pixels, mais vous pouvez également le définir en bordure ou en REM.
+
+61
+00:02:50,000 --> 00:02:54,720
+REM est relatif à la taille de police de base, donc si vous modifiez la taille de police de base,
+
+62
+00:02:54,720 --> 00:02:57,360
+cela changera l'espacement de tout.
+
+63
+00:02:57,360 --> 00:02:59,600
+Cela peut être utile pour les conceptions réactives.
+
+64
+00:03:00,640 --> 00:03:02,960
+Ensuite, la bordure, qui est la frontière entre le remplissage et la marge,
+
+65
+00:03:02,960 --> 00:03:06,080
+et a une syntaxe, une taille, un type et une couleur en trois parties.
+
+66
+00:03:06,080 --> 00:03:09,200
+99 % du temps, vous utiliserez simplement du solide pour le type,
+
+67
+00:03:09,200 --> 00:03:11,520
+et les règles de couleur fonctionnent de la même manière que pour les autres éléments.
+
+68
+00:03:12,080 --> 00:03:16,400
+Enfin, la marge, qui se trouve à l'extérieur de notre boîte, et fonctionne exactement de la même manière que le remplissage.
+
+69
+00:03:16,400 --> 00:03:18,720
+avec la syntaxe de valeurs 1 à 4.
+
+70
+00:03:18,720 --> 00:03:21,040
+Notre couleur de fond ne s’étendra pas dans la marge.
+
+71
+00:03:21,920 --> 00:03:23,440
+D'accord, c'est le modèle en boîte.
+
+72
+00:03:23,440 --> 00:03:27,280
+Ensuite, la propriété display, à utiliser en ligne pour une ligne continue,
+
+73
+00:03:27,280 --> 00:03:31,280
+et bloquez les éléments spatiaux, ou bloquez en ligne si vous le souhaitez toujours
+
+74
+00:03:31,280 --> 00:03:37,520
+les avantages de pouvoir définir le rembourrage supérieur et inférieur, tout en conservant la même ligne.
+
+75
+00:03:38,480 --> 00:03:41,600
+Display Flex et Grid méritent leurs propres vidéos entières.
+
+76
+00:03:42,160 --> 00:03:45,200
+Vous pouvez spécifier une grille exacte, ce qui est idéal pour la construction,
+
+77
+00:03:45,200 --> 00:03:47,680
+basé sur un design ou un wireframe UX.
+
+78
+00:03:48,240 --> 00:03:52,800
+Pour un usage général et un espacement au fur et à mesure, Display Flex est incroyable, et c'est mon préféré.
+
+79
+00:03:53,760 --> 00:03:58,960
+Il est facile de centrer horizontalement et verticalement avec les éléments alignés et les propriétés de contenu justifiées.
+
+80
+00:04:00,160 --> 00:04:03,680
+Vous pouvez également placer des éléments à des emplacements personnalisés en définissant une position relative sur le parent,
+
+81
+00:04:03,680 --> 00:04:04,800
+et absolu sur l'enfant.
+
+82
+00:04:05,440 --> 00:04:09,120
+Ensuite, nous définissons les valeurs en haut à gauche, en bas et à droite, qui peuvent également être des pourcentages.
+
+83
+00:04:09,920 --> 00:04:13,680
+Revenons maintenant aux sélecteurs pendant une minute. Nous avons également des pseudo-classes que vous pouvez ajouter avec deux points.
+
+84
+00:04:14,320 --> 00:04:16,720
+Le plus courant est probablement le survol, qui fonctionne un peu comme ceci.
+
+85
+00:04:17,840 --> 00:04:22,000
+Un ensemble de styles différent lorsque votre souris est sur l'élément et pour en faire une transition en douceur,
+
+86
+00:04:22,000 --> 00:04:25,600
+nous pouvons ajouter la propriété de transition, qui prend du temps et une valeur folle.
+
+87
+00:04:27,200 --> 00:04:31,360
+Nous pouvons également faire bouger ce bouton en survol avec la propriété de transformation extrêmement intéressante.
+
+88
+00:04:31,360 --> 00:04:33,920
+Il existe d'autres pseudo-classes qui permettent de sélectionner un élément,
+
+89
+00:04:33,920 --> 00:04:36,320
+un peu comme nous le faisions avec l'espace et la carotte.
+
+90
+00:04:36,320 --> 00:04:40,240
+Quelques exemples sont le premier enfant et l'enfant, mais encore une fois, restez plus simple que cela,
+
+91
+00:04:40,240 --> 00:04:40,960
+chaque fois que vous le pouvez.
+
+92
+00:04:41,760 --> 00:04:46,000
+Nous n’avons pas abordé la famille de polices ni la taille de police, mais celles-ci sont assez explicites.
+
+93
+00:04:46,080 --> 00:04:49,840
+Vous verrez toujours plusieurs polices pour la famille de polices, juste au cas où la première ne fonctionnerait pas.
+
+94
+00:04:49,840 --> 00:04:54,160
+Nous avons couvert la couleur d'arrière-plan, mais vous pouvez également définir une tonne de propriétés d'arrière-plan supplémentaires, comme l'arrière-plan.
+
+95
+00:04:54,160 --> 00:04:59,760
+image, et vous pouvez utiliser la syntaxe d'arrière-plan abrégée pour tout mettre sur une seule ligne.
+
+96
+00:04:59,760 --> 00:05:04,640
+D'autres attributs intéressants incluent des ombres comme l'ombre de la boîte et l'ombre portée, et j'utilise généralement une boîte
+
+97
+00:05:04,640 --> 00:05:06,400
+générateur d'ombre ou d'ombre portée pour cela.
+
+98
+00:05:06,880 --> 00:05:10,160
+Vous pouvez jouer avec les options, puis copier simplement ce CSS ici.
+
+99
+00:05:10,320 --> 00:05:12,640
+Il suffit de Google Box Shadow Generator pour trouver cela.
+
+100
+00:05:13,120 --> 00:05:17,760
+À propos, vous remarquerez ces éléments appelés préfixes de fournisseur devant la propriété box shadow.
+
+101
+00:05:17,760 --> 00:05:21,680
+Ceux-ci sont utilisés pour des attributs nouveaux ou expérimentaux qui sont ajoutés au CSS.
+
+102
+00:05:21,680 --> 00:05:26,800
+À ce stade, Box Shadow n'est pas nouveau du tout, c'est donc juste pour une compatibilité ascendante avec les versions plus anciennes.
+
+103
+00:05:26,800 --> 00:05:31,360
+navigateurs. Mon rôle est de les utiliser s'ils sont inclus dans la documentation à cet effet.
+
+104
+00:05:31,360 --> 00:05:33,599
+attribut, mais sinon vous dormez dehors.
+
+105
+00:05:34,000 --> 00:05:39,200
+Vous pouvez créer des animations avec une image clé et la propriété animation, et il est généralement préférable de simplement
+
+106
+00:05:39,280 --> 00:05:44,719
+Animation CSS Google, puis tout ce que vous voulez, et vous pourrez en trouver une assez facilement.
+
+107
+00:05:45,440 --> 00:05:48,560
+Tout comme l’animation d’arrière-plan a également une propriété abrégée.
+
+108
+00:05:49,120 --> 00:05:53,360
+Enfin, nous avons les requêtes multimédias, qui nous permettent de créer des styles adaptés aux mobiles et à différentes tailles d'écran.
+
+109
+00:05:54,159 --> 00:05:59,520
+Celles-ci sont déclenchées par des points d'arrêt, qui ressemblent un peu aux instructions if, donc si la largeur est plus large,
+
+110
+00:05:59,520 --> 00:06:02,240
+puis une certaine quantité de pixels, puis le style est appliqué.
+
+111
+00:06:02,880 --> 00:06:05,599
+Vous pouvez utiliser les outils de développement de votre navigateur pour tester cela.
+
+112
+00:06:06,560 --> 00:06:11,520
+Qu'y a-t-il d'autre avec CSS ? Eh bien, vous avez des préprocesseurs. Le commun est
+
+113
+00:06:11,520 --> 00:06:18,560
+SS ou SAS, qui vous donne plus de syntaxe, de variables, de propriétés imbriquées, mais il ne fait rien de normal
+
+114
+00:06:18,560 --> 00:06:25,200
+CSS ne peut pas. Enfin, dans des frameworks comme React, vous verrez du CSS en JavaScript, également appelé
+
+115
+00:06:25,200 --> 00:06:31,440
+un modèle de composant de style, et la frontière entre JavaScript CSS et HTML devient vraiment floue ici.
+
+116
+00:06:31,520 --> 00:06:35,760
+Ne vous inquiétez pas trop, ces composants de style sont très similaires au CSS classique,
+
+117
+00:06:35,760 --> 00:06:41,440
+et soyez converti en CSS au moment de la compilation. Que vous soyez déjà un pro du CSS ou simplement un
+
+118
+00:06:41,440 --> 00:06:46,720
+front et développeur inspirant, j'espère que ce fut un résumé utile de CSS. Comme si tu avais appris
+
+119
+00:06:46,720 --> 00:06:51,840
+quelque chose, et si vous souhaitez devenir développeur de logiciels à distance, abonnez-vous pour plus de contenu comme celui-ci.
+

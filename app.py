@@ -1,9 +1,10 @@
 from flask import Flask, render_template, request, send_from_directory, abort
 from flask_socketio import SocketIO
-import os, time, subprocess
+import os, time, subprocess, shutil
 import yt_dlp
 import whisper
 import sys
+import threading
 from cipher import get_initial_function_name
 from pytube.cipher import get_initial_function_name as _get_initial_function_name
 sys.modules['pytube.cipher'].get_initial_function_name = get_initial_function_name
@@ -19,6 +20,48 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 # Création des répertoires
 for folder in ["videos", "subtitles", "translated_videos", "voices", "voices/temp"]:
     os.makedirs(folder, exist_ok=True)
+
+# Configuration de la rétention des fichiers
+RETENTION_MINUTES = 5
+temp_files = {}  # stocke les chemins de fichiers avec leur timestamp d'expiration
+temp_files_lock = threading.Lock()
+
+def schedule_file_deletion(file_path):
+    """Programme la suppression d'un fichier après RETENTION_MINUTES"""
+    if not os.path.exists(file_path):
+        return
+    with temp_files_lock:
+        temp_files[file_path] = time.time() + (RETENTION_MINUTES * 60)
+
+def cleanup_expired_files():
+    """Nettoie les fichiers qui ont dépassé leur durée de rétention"""
+    current_time = time.time()
+    to_delete = []
+    
+    with temp_files_lock:
+        for file_path, expiry_time in list(temp_files.items()):
+            if current_time >= expiry_time:
+                if os.path.exists(file_path):
+                    try:
+                        os.remove(file_path)
+                        socketio.emit('log', f"🗑️ Fichier expiré supprimé : {os.path.basename(file_path)}")
+                    except Exception as e:
+                        socketio.emit('log', f"⚠️ Erreur lors de la suppression : {str(e)}")
+                to_delete.append(file_path)
+        
+        # Nettoyer les entrées supprimées
+        for file_path in to_delete:
+            del temp_files[file_path]
+
+def start_cleanup_thread():
+    """Démarre le thread de nettoyage périodique"""
+    def cleanup_loop():
+        while True:
+            cleanup_expired_files()
+            time.sleep(60)  # vérifier toutes les minutes
+    
+    thread = threading.Thread(target=cleanup_loop, daemon=True)
+    thread.start()
 
 # ==================== Fonctions ====================
 
@@ -40,31 +83,49 @@ def get_video_duration(video_path):
     except ValueError as e:
         raise RuntimeError(f"Impossible de parser la durée renvoyée par ffprobe: {output}") from e
 
-def download_youtube_video(url, output_path="videos/"):
+def download_youtube_video(url, output_path="videos/", quality="best", use_aria2=False):
     socketio.emit('log', "🔄 Tentative de téléchargement de la vidéo...")
     try:
+        # Map quality to yt-dlp format string
+        if quality == 'best':
+            fmt = 'best[ext=mp4]'
+        elif quality == 'medium':
+            fmt = 'best[height<=720][ext=mp4]/best[ext=mp4]'
+        elif quality == 'low':
+            fmt = 'best[height<=360][ext=mp4]/best[ext=mp4]'
+        else:
+            fmt = 'best[ext=mp4]'
+
         # Configuration de yt-dlp
         ydl_opts = {
-            'format': 'best[ext=mp4]',
+            'format': fmt,
             'outtmpl': os.path.join(output_path, '%(title)s.%(ext)s'),
-            'progress_hooks': [lambda d: socketio.emit('log', f"📥 Téléchargement : {d['_percent_str']} - {d.get('_speed_str', 'calcul...')}")],
+            'progress_hooks': [lambda d: socketio.emit('log', f"📥 Téléchargement : {d.get('_percent_str', '')} - {d.get('_speed_str', '')}" )],
             'no_warnings': True,
-            'quiet': True
+            'quiet': True,
         }
+
+        # If aria2c is requested and available, use it to speed up downloads
+        if use_aria2 and shutil.which('aria2c'):
+            ydl_opts['external_downloader'] = 'aria2c'
+            ydl_opts['external_downloader_args'] = ['-x', '16', '-s', '16', '-k', '1M']
 
         # Téléchargement de la vidéo
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             try:
                 # Récupérer les informations de la vidéo
                 info = ydl.extract_info(url, download=False)
-                socketio.emit('log', f"✨ Vidéo trouvée : {info['title']}")
-                
+                socketio.emit('log', f"✨ Vidéo trouvée : {info.get('title')}")
+
                 # Télécharger la vidéo
                 socketio.emit('log', "🎥 Démarrage du téléchargement...")
                 ydl.download([url])
-                
+
                 # Construire le chemin du fichier téléchargé
-                output_file = os.path.join(output_path, f"{info['title']}.mp4")
+                title = info.get('title') or 'video'
+                ext = info.get('ext') or 'mp4'
+                safe_title = title.replace('/', '_').replace('\\', '_')
+                output_file = os.path.join(output_path, f"{safe_title}.{ext}")
                 socketio.emit('log', "✅ Téléchargement terminé")
                 return output_file
 
@@ -193,9 +254,14 @@ def process_video():
         # Créer un identifiant unique pour cette vidéo
         import uuid
         video_id = str(uuid.uuid4())[:8]
-        
+        # Lire options depuis le formulaire
+        quality = request.form.get('quality', 'best')
+        use_aria2 = request.form.get('use_aria2', 'off') in ('on', 'true', '1')
+        # Supprimer les fichiers originaux et temporaires automatiquement
+        delete_original = True
+
         # Téléchargement
-        video_path = download_youtube_video(youtube_url)
+        video_path = download_youtube_video(youtube_url, quality=quality, use_aria2=use_aria2)
         
         # Durée via FFmpeg
         duration_min = get_video_duration(video_path)/60
@@ -215,6 +281,28 @@ def process_video():
         output_video = replace_audio(video_path, voice_path, output_path)
         
         filename = os.path.basename(output_video)
+        # Optionnel : supprimer les fichiers intermédiaires/originaux
+        if delete_original:
+            try:
+                if os.path.exists(video_path):
+                    schedule_file_deletion(video_path)
+                    socketio.emit('log', f"⏳ Fichier source conservé {RETENTION_MINUTES} minutes : {os.path.basename(video_path)}")
+                if os.path.exists(voice_path):
+                    schedule_file_deletion(voice_path)
+                    socketio.emit('log', f"⏳ Fichier voix conservé {RETENTION_MINUTES} minutes : {os.path.basename(voice_path)}")
+                if os.path.exists(srt_path):
+                    schedule_file_deletion(srt_path)
+                    socketio.emit('log', f"⏳ Sous-titres conservés {RETENTION_MINUTES} minutes : {os.path.basename(srt_path)}")
+                # Clean temporary voice fragments
+                if os.path.isdir('voices/temp'):
+                    for f in os.listdir('voices/temp'):
+                        try:
+                            path = os.path.join('voices/temp', f)
+                            schedule_file_deletion(path)
+                        except:
+                            pass
+            except Exception as e:
+                socketio.emit('log', f"⚠️ Erreur lors du nettoyage : {str(e)}")
         socketio.emit('finished', {'video_file': filename})
         return "ok"
         
@@ -226,7 +314,13 @@ def process_video():
 def download_video(filename):
     return send_from_directory("translated_videos", filename, as_attachment=True)
 
+
 if __name__ == "__main__":
+    # Nettoyer les fichiers expirés au démarrage
+    cleanup_expired_files()
+    # Démarrer le thread de nettoyage périodique
+    start_cleanup_thread()
+
     print("🌐 Démarrage du serveur...")
     print("📝 Accédez à l'application sur : http://127.0.0.1:5000")
     socketio.run(app, host='127.0.0.1', port=5000, debug=True)

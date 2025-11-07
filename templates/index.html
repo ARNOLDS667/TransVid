@@ -9,12 +9,28 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.6.1/socket.io.min.js"></script>
 </head>
 <body>
+<div id="loadingOverlay" class="loading-overlay" style="display: none;">
+    <div class="spinner"></div>
+    <div class="loading-text">Chargement en cours...</div>
+</div>
 <div class="container">
     <h1>🎧 TransVid Pro</h1>
     <p>Traduisez et doublez vos vidéos YouTube automatiquement en français.</p>
 
     <form id="videoForm">
         <input type="text" name="youtube_url" placeholder="Entrez l’URL YouTube ici" required>
+
+        <label for="quality">Qualité vidéo :</label>
+        <select name="quality" id="quality">
+            <option value="best">Meilleure (par défaut)</option>
+            <option value="medium">Moyenne (≤720p) — plus rapide</option>
+            <option value="low">Faible (≤360p) — plus rapide et léger</option>
+        </select>
+
+        <!-- Option aria2 retirée : téléchargement géré côté serveur automatiquement -->
+
+        <!-- Suppression automatique des fichiers gérée côté serveur -->
+
         <button type="submit">Lancer la traduction & doublage</button>
     </form>
 
@@ -25,6 +41,8 @@
     </div>
 
     <div id="downloadLink" class="download"></div>
+    <!-- Le bouton de purge a été retiré (nettoyage automatique) -->
+    <div id="toast" style="position:fixed;bottom:20px;right:20px;display:none;background:#333;color:#fff;padding:12px 18px;border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,0.15);z-index:9999;"></div>
 </div>
 
 <script>
@@ -33,13 +51,56 @@ const form = document.getElementById("videoForm");
 const logs = document.getElementById("logs");
 const progressBar = document.getElementById("progressBar");
 const downloadLink = document.getElementById("downloadLink");
+const toast = document.getElementById('toast');
 
 form.addEventListener("submit", e=>{
     e.preventDefault();
     downloadLink.innerHTML = "";
     logs.innerHTML = "";
     progressBar.style.width = "0%";
-    fetch("/process_video", {method:"POST", body:new FormData(form)});
+
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    const loadingText = loadingOverlay.querySelector('.loading-text');
+    loadingText.textContent = 'Début du téléchargement...';
+    // show a blocking overlay immediately so user gets instant feedback
+    loadingOverlay.style.display = 'flex';
+
+    // disable submit while processing
+    const submitBtn = form.querySelector('button[type=submit]');
+    submitBtn.disabled = true;
+
+    // If we don't hear any socket activity in this time, assume something went wrong
+    let activityTimeout = setTimeout(()=>{
+        loadingOverlay.style.display = 'none';
+        submitBtn.disabled = false;
+        showToast("Aucune activité détectée. Vérifiez l'URL ou réessayez.", true);
+    }, 25000); // 25s
+
+    // Hide the initial loading overlay as soon as the backend emits any progress/log
+    const onFirstActivity = ()=>{
+        clearTimeout(activityTimeout);
+        loadingOverlay.style.display = 'none';
+    };
+    socket.once('progress', onFirstActivity);
+    socket.once('log', onFirstActivity);
+
+    // Ensure the submit button is re-enabled when finished or on error
+    const onFinishOrError = ()=>{
+        clearTimeout(activityTimeout);
+        loadingOverlay.style.display = 'none';
+        submitBtn.disabled = false;
+    };
+    socket.once('finished', onFinishOrError);
+    socket.once('error', onFinishOrError);
+
+    // fire the request; handle immediate fetch errors separately
+    fetch("/process_video", {method:"POST", body:new FormData(form)})
+        .catch(err=>{
+            clearTimeout(activityTimeout);
+            loadingOverlay.style.display = 'none';
+            submitBtn.disabled = false;
+            showToast('Erreur de requête : ' + err, true);
+        });
 });
 
 socket.on("log", msg=>{
@@ -57,11 +118,22 @@ socket.on("progress", data=>{
 socket.on("finished", data=>{
     downloadLink.innerHTML = `<a href="/translated_videos/${data.video_file}" class="btn">Télécharger la vidéo doublée</a>`;
     logs.innerHTML += `<div class="log success">✅ Traitement terminé !</div>`;
+    showToast('✅ Traitement terminé — vidéo disponible');
 });
 
 socket.on("error", msg=>{
     logs.innerHTML += `<div class="log error">⚠️ Erreur : ${msg}</div>`;
+    showToast('⚠️ Erreur : ' + msg, true);
 });
+
+// Le bouton de purge a été retiré : le serveur supprime automatiquement les fichiers temporaires
+
+function showToast(message, isError=false){
+    toast.textContent = message;
+    toast.style.background = isError ? '#c0392b' : '#2d7a2d';
+    toast.style.display = 'block';
+    setTimeout(()=> toast.style.display = 'none', 5000);
+}
 </script>
 </body>
 </html>
