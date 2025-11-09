@@ -3,137 +3,546 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TransVid Pro</title>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+<title>TransVid Pro - Doublage IA</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.6.1/socket.io.min.js"></script>
 </head>
 <body>
-<div id="loadingOverlay" class="loading-overlay" style="display: none;">
-    <div class="spinner"></div>
-    <div class="loading-text">Chargement en cours...</div>
+
+<!-- Theme Toggle -->
+<div class="theme-toggle" id="themeToggle">
+    <span class="icon">🌙</span>
 </div>
-<div class="container">
-    <h1>🎧 TransVid Pro</h1>
-    <p>Traduisez et doublez vos vidéos YouTube automatiquement en français.</p>
 
-    <form id="videoForm">
-        <input type="text" name="youtube_url" placeholder="Entrez l’URL YouTube ici" required>
+<!-- Main Container -->
+<div class="main-container">
+    <!-- Header VidMate Style -->
+    <header class="header-vidmate">
+        <div class="logo-container">
+            <div class="logo-circle">
+                <span class="logo-icon">🎬</span>
+            </div>
+            <div class="logo-text">
+                <h1>TransVid <span class="pro-badge-new">PRO</span></h1>
+                <p class="subtitle">Doublage intelligent par IA</p>
+            </div>
+        </div>
+    </header>
 
-        <label for="quality">Qualité vidéo :</label>
-        <select name="quality" id="quality">
-            <option value="best">Meilleure (par défaut)</option>
-            <option value="medium">Moyenne (≤720p) — plus rapide</option>
-            <option value="low">Faible (≤360p) — plus rapide et léger</option>
-        </select>
-
-        <!-- Option aria2 retirée : téléchargement géré côté serveur automatiquement -->
-
-        <!-- Suppression automatique des fichiers gérée côté serveur -->
-
-        <button type="submit">Lancer la traduction & doublage</button>
-    </form>
-
-    <div id="logs" class="logs"></div>
-
-    <div id="progressBarContainer">
-        <div id="progressBar"></div>
+    <!-- Quick Stats Banner -->
+    <div class="stats-banner">
+        <div class="stat-item">
+            <div class="stat-icon-circle">⚡</div>
+            <div class="stat-content">
+                <span class="stat-number" id="totalProcessed">0</span>
+                <span class="stat-label">Vidéos</span>
+            </div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-icon-circle">⏱️</div>
+            <div class="stat-content">
+                <span class="stat-number" id="avgTime">--</span>
+                <span class="stat-label">Temps moy.</span>
+            </div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-icon-circle">🎯</div>
+            <div class="stat-content">
+                <span class="stat-number" id="successRate">100%</span>
+                <span class="stat-label">Succès</span>
+            </div>
+        </div>
     </div>
 
-    <div id="downloadLink" class="download"></div>
-    <!-- Le bouton de purge a été retiré (nettoyage automatique) -->
-    <div id="toast" style="position:fixed;bottom:20px;right:20px;display:none;background:#333;color:#fff;padding:12px 18px;border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,0.15);z-index:9999;"></div>
+    <!-- Main Card VidMate Style -->
+    <div class="card-vidmate">
+        <!-- Video Preview VidMate Style -->
+        <div class="video-preview-vidmate" id="videoPreview" style="display: none;">
+            <div class="preview-thumbnail">
+                <img id="thumbnailImg" alt="Aperçu">
+                <div class="preview-duration" id="previewDuration">0:00</div>
+            </div>
+            <div class="preview-info">
+                <h3 id="videoTitle"></h3>
+                <div class="preview-meta">
+                    <span id="videoChannel"></span>
+                    <span class="separator">•</span>
+                    <span id="videoViews"></span>
+                </div>
+            </div>
+            <button class="btn-close-preview-vidmate" onclick="closePreview()">✕</button>
+        </div>
+
+        <!-- Form VidMate Style -->
+        <form id="videoForm" class="video-form-vidmate">
+            <!-- URL Input with Preview Button -->
+            <div class="input-container-vidmate">
+                <div class="input-icon">🔗</div>
+                <input 
+                    type="text" 
+                    name="youtube_url" 
+                    id="youtubeUrl"
+                    placeholder="Coller le lien YouTube ici..." 
+                    required>
+                <button type="button" class="btn-inline-preview" onclick="previewVideo()">
+                    👁️
+                </button>
+            </div>
+
+            <!-- Options Grid VidMate Style -->
+            <div class="options-container-vidmate">
+                <!-- Quality Selector -->
+                <div class="option-card-vidmate">
+                    <div class="option-header">
+                        <span class="option-icon-vidmate">🎥</span>
+                        <span class="option-title">Qualité</span>
+                    </div>
+                    <select name="quality" id="quality" class="select-vidmate">
+                        <option value="best">Meilleure (1080p)</option>
+                        <option value="medium" selected>Moyenne (720p) ⚡</option>
+                        <option value="low">Basse (360p) 🚀</option>
+                    </select>
+                </div>
+
+                <!-- Voice Gender Selector -->
+                <div class="option-card-vidmate">
+                    <div class="option-header">
+                        <span class="option-icon-vidmate">🗣️</span>
+                        <span class="option-title">Voix</span>
+                    </div>
+                    <select name="voice_gender" id="voiceGender" class="select-vidmate">
+                        <option value="female">Féminine 👩</option>
+                        <option value="male">Masculine 👨</option>
+                    </select>
+                </div>
+
+                <!-- Advanced Options Toggle -->
+                <div class="option-card-vidmate option-card-full">
+                    <div class="option-header">
+                        <span class="option-icon-vidmate">⚙️</span>
+                        <span class="option-title">Options avancées</span>
+                    </div>
+                    <div class="toggle-group">
+                        <label class="toggle-switch">
+                            <input type="checkbox" name="use_aria2" id="useAria2">
+                            <span class="toggle-slider"></span>
+                            <span class="toggle-label">Téléchargement rapide (aria2)</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Big Download Button VidMate Style -->
+            <button type="submit" class="btn-download-vidmate" id="submitBtn">
+                <span class="btn-icon-large">⬇️</span>
+                <div class="btn-text-group">
+                    <span class="btn-main-text">Lancer le doublage</span>
+                    <span class="btn-sub-text">Télécharger et traduire en français</span>
+                </div>
+            </button>
+        </form>
+
+        <!-- Progress Section VidMate Style -->
+        <div class="progress-section-vidmate" id="progressSection" style="display: none;">
+            <!-- Current Step with Animation -->
+            <div class="current-step-vidmate">
+                <div class="step-icon-animated" id="stepIcon">📥</div>
+                <div class="step-info-vidmate">
+                    <h3 id="stepTitle">Préparation...</h3>
+                    <p id="stepMessage">Initialisation du traitement</p>
+                </div>
+            </div>
+
+            <!-- Circular Progress -->
+            <div class="circular-progress-container">
+                <svg class="circular-progress" width="150" height="150">
+                    <circle class="bg-circle" cx="75" cy="75" r="65"></circle>
+                    <circle class="progress-circle" cx="75" cy="75" r="65" id="progressCircle"></circle>
+                </svg>
+                <div class="progress-percent-center" id="progressPercent">0%</div>
+            </div>
+
+            <!-- Progress Details -->
+            <div class="progress-details-vidmate">
+                <span id="progressDetails">En attente...</span>
+            </div>
+
+            <!-- Mini Steps Timeline -->
+            <div class="mini-steps">
+                <div class="mini-step" data-step="download">📥</div>
+                <div class="mini-step" data-step="transcribe">🎧</div>
+                <div class="mini-step" data-step="translate">🌐</div>
+                <div class="mini-step" data-step="voice">🗣️</div>
+                <div class="mini-step" data-step="merge">🎬</div>
+            </div>
+        </div>
+
+        <!-- Compact Logs -->
+        <div class="logs-container-vidmate" id="logsContainer" style="display: none;">
+            <div class="logs-header-vidmate">
+                <span>📋 Activité</span>
+                <button class="btn-toggle-logs" onclick="toggleLogs()">▼</button>
+            </div>
+            <div class="logs-vidmate" id="logs"></div>
+        </div>
+
+        <!-- Download Success VidMate Style -->
+        <div class="success-section-vidmate" id="downloadSection" style="display: none;">
+            <div class="success-icon-vidmate">
+                <div class="checkmark-circle">✓</div>
+            </div>
+            <h2>Vidéo prête ! 🎉</h2>
+            <p class="success-subtitle">Votre vidéo doublée est disponible</p>
+            
+            <div id="downloadLink"></div>
+            
+            <div class="success-actions">
+                <button class="btn-new-video" onclick="resetForm()">
+                    <span>🔄</span> Nouvelle vidéo
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- History Section VidMate Style -->
+    <div class="history-section-vidmate" id="historyCard" style="display: none;">
+        <div class="section-header-vidmate">
+            <h3>📚 Récents</h3>
+            <button class="btn-clear-history" onclick="clearHistory()">Effacer</button>
+        </div>
+        <div class="history-grid-vidmate" id="historyList"></div>
+    </div>
 </div>
 
+<!-- Toast Container -->
+<div id="toastContainer" class="toast-container-vidmate"></div>
+
 <script>
-const socket = io();
-const form = document.getElementById("videoForm");
-const logs = document.getElementById("logs");
-const progressBar = document.getElementById("progressBar");
-const downloadLink = document.getElementById("downloadLink");
-const toast = document.getElementById('toast');
+// ============= Configuration =============
+const socket = io({
+    reconnection: true,
+    reconnectionDelay: 1000,
+    reconnectionAttempts: 5,
+    timeout: 120000
+});
 
-form.addEventListener("submit", e=>{
-    e.preventDefault();
-    downloadLink.innerHTML = "";
-    logs.innerHTML = "";
-    progressBar.style.width = "0%";
+const form = document.getElementById('videoForm');
+const submitBtn = document.getElementById('submitBtn');
+const progressSection = document.getElementById('progressSection');
+const downloadSection = document.getElementById('downloadSection');
+const logsContainer = document.getElementById('logsContainer');
+const logs = document.getElementById('logs');
+const videoPreview = document.getElementById('videoPreview');
 
-    const loadingOverlay = document.getElementById('loadingOverlay');
-    const loadingText = loadingOverlay.querySelector('.loading-text');
-    loadingText.textContent = 'Début du téléchargement...';
-    // show a blocking overlay immediately so user gets instant feedback
-    loadingOverlay.style.display = 'flex';
+let startTime = null;
+let processingHistory = JSON.parse(localStorage.getItem('transvid_history') || '[]');
+let logsExpanded = false;
 
-    // disable submit while processing
-    const submitBtn = form.querySelector('button[type=submit]');
-    submitBtn.disabled = true;
+// ============= Theme Toggle =============
+const themeToggle = document.getElementById('themeToggle');
+const currentTheme = localStorage.getItem('theme') || 'dark';
+document.body.classList.add(currentTheme + '-theme');
+updateThemeIcon();
 
-    // If we don't hear any socket activity in this time, assume something went wrong
-    let activityTimeout = setTimeout(()=>{
-        loadingOverlay.style.display = 'none';
-        submitBtn.disabled = false;
-        showToast("Aucune activité détectée. Vérifiez l'URL ou réessayez.", true);
-    }, 25000); // 25s
+themeToggle.addEventListener('click', () => {
+    const isLight = document.body.classList.contains('light-theme');
+    document.body.classList.remove('light-theme', 'dark-theme');
+    document.body.classList.add(isLight ? 'dark-theme' : 'light-theme');
+    localStorage.setItem('theme', isLight ? 'dark' : 'light');
+    updateThemeIcon();
+});
 
-    // Hide the initial loading overlay as soon as the backend emits any progress/log
-    const onFirstActivity = ()=>{
-        clearTimeout(activityTimeout);
-        loadingOverlay.style.display = 'none';
-    };
-    socket.once('progress', onFirstActivity);
-    socket.once('log', onFirstActivity);
+function updateThemeIcon() {
+    const icon = themeToggle.querySelector('.icon');
+    icon.textContent = document.body.classList.contains('dark-theme') ? '☀️' : '🌙';
+}
 
-    // Ensure the submit button is re-enabled when finished or on error
-    const onFinishOrError = ()=>{
-        clearTimeout(activityTimeout);
-        loadingOverlay.style.display = 'none';
-        submitBtn.disabled = false;
-    };
-    socket.once('finished', onFinishOrError);
-    socket.once('error', onFinishOrError);
+// ============= Video Preview =============
+async function previewVideo() {
+    const url = document.getElementById('youtubeUrl').value.trim();
+    if (!url) {
+        showToast('Veuillez entrer une URL', 'error');
+        return;
+    }
 
-    // fire the request; handle immediate fetch errors separately
-    fetch("/process_video", {method:"POST", body:new FormData(form)})
-        .catch(err=>{
-            clearTimeout(activityTimeout);
-            loadingOverlay.style.display = 'none';
-            submitBtn.disabled = false;
-            showToast('Erreur de requête : ' + err, true);
+    showToast('Chargement...', 'info');
+    
+    try {
+        const response = await fetch('/get_video_info', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({url})
         });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            const info = data.info;
+            document.getElementById('thumbnailImg').src = info.thumbnail;
+            document.getElementById('videoTitle').textContent = info.title;
+            document.getElementById('videoChannel').textContent = info.channel;
+            document.getElementById('videoViews').textContent = formatViews(info.view_count) + ' vues';
+            document.getElementById('previewDuration').textContent = formatDuration(info.duration);
+            videoPreview.style.display = 'flex';
+            videoPreview.classList.add('fade-in');
+            showToast('Aperçu chargé', 'success');
+        } else {
+            showToast(data.error, 'error');
+        }
+    } catch (error) {
+        showToast('Erreur de chargement', 'error');
+    }
+}
+
+function closePreview() {
+    videoPreview.style.display = 'none';
+}
+
+// ============= Form Submission =============
+form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    downloadSection.style.display = 'none';
+    progressSection.style.display = 'block';
+    logsContainer.style.display = 'block';
+    logs.innerHTML = '';
+    submitBtn.disabled = true;
+    closePreview();
+    
+    startTime = Date.now();
+    
+    try {
+        const formData = new FormData(form);
+        await fetch('/process_video', {method: 'POST', body: formData});
+    } catch (error) {
+        showToast('Erreur: ' + error, 'error');
+        submitBtn.disabled = false;
+    }
 });
 
-socket.on("log", msg=>{
-    logs.innerHTML += `<div class="log">${msg}</div>`;
+// ============= Socket Events =============
+socket.on('connect', () => {
+    console.log('✅ Connecté au serveur');
+});
+
+socket.on('disconnect', () => {
+    console.log('❌ Déconnecté du serveur');
+    showToast('Connexion perdue, reconnexion...', 'warning');
+});
+
+socket.on('log', (msg) => {
+    const logEntry = document.createElement('div');
+    logEntry.className = 'log-entry-vidmate';
+    logEntry.innerHTML = `<span class="log-time">${getTime()}</span> ${msg}`;
+    logs.appendChild(logEntry);
     logs.scrollTop = logs.scrollHeight;
 });
 
-socket.on("progress", data=>{
-    let percent = Math.round(data.current/data.total*100);
-    progressBar.style.width = percent + "%";
-    logs.innerHTML += `<div class="log">🔹 ${data.step} : ${data.current}/${data.total}</div>`;
-    logs.scrollTop = logs.scrollHeight;
+socket.on('step_change', (data) => {
+    updateCurrentStep(data.step, data.message);
 });
 
-socket.on("finished", data=>{
-    downloadLink.innerHTML = `<a href="/translated_videos/${data.video_file}" class="btn">Télécharger la vidéo doublée</a>`;
-    logs.innerHTML += `<div class="log success">✅ Traitement terminé !</div>`;
-    showToast('✅ Traitement terminé — vidéo disponible');
+socket.on('progress', (data) => {
+    updateCircularProgress(data.percent, data.message);
+    updateMiniSteps(data.step);
 });
 
-socket.on("error", msg=>{
-    logs.innerHTML += `<div class="log error">⚠️ Erreur : ${msg}</div>`;
-    showToast('⚠️ Erreur : ' + msg, true);
+socket.on('finished', (data) => {
+    const duration = ((Date.now() - startTime) / 1000 / 60).toFixed(1);
+    
+    progressSection.style.display = 'none';
+    downloadSection.style.display = 'block';
+    downloadSection.classList.add('fade-in');
+    
+    const fileSize = ((data.duration || 0) * 2).toFixed(0); // Estimation
+    document.getElementById('downloadLink').innerHTML = 
+        `<a href="/translated_videos/${data.video_file}" class="btn-download-final" download>
+            <div class="download-icon-circle">⬇️</div>
+            <div class="download-info">
+                <span class="download-title">Télécharger la vidéo</span>
+                <span class="download-meta">${(data.duration || 0).toFixed(1)} min • ~${fileSize} MB</span>
+            </div>
+        </a>`;
+    
+    addToHistory({
+        title: data.info?.title || 'Vidéo',
+        duration: duration,
+        timestamp: Date.now(),
+        file: data.video_file,
+        thumbnail: data.info?.thumbnail || ''
+    });
+    
+    submitBtn.disabled = false;
+    showToast('✅ Terminé !', 'success');
+    updateStats();
 });
 
-// Le bouton de purge a été retiré : le serveur supprime automatiquement les fichiers temporaires
+socket.on('error', (msg) => {
+    showToast('❌ ' + msg, 'error');
+    submitBtn.disabled = false;
+    progressSection.style.display = 'none';
+});
 
-function showToast(message, isError=false){
-    toast.textContent = message;
-    toast.style.background = isError ? '#c0392b' : '#2d7a2d';
-    toast.style.display = 'block';
-    setTimeout(()=> toast.style.display = 'none', 5000);
+// ============= Progress Functions =============
+function updateCurrentStep(step, message) {
+    const stepData = {
+        download: {icon: '📥', title: 'Téléchargement'},
+        transcribe: {icon: '🎧', title: 'Transcription'},
+        translate: {icon: '🌐', title: 'Traduction'},
+        voice: {icon: '🗣️', title: 'Doublage'},
+        merge: {icon: '🎬', title: 'Finalisation'}
+    };
+    
+    const current = stepData[step] || {icon: '⚙️', title: 'Traitement'};
+    document.getElementById('stepIcon').textContent = current.icon;
+    document.getElementById('stepTitle').textContent = current.title;
+    document.getElementById('stepMessage').textContent = message || '';
+}
+
+function updateCircularProgress(percent, message) {
+    const circle = document.getElementById('progressCircle');
+    const percentText = document.getElementById('progressPercent');
+    const details = document.getElementById('progressDetails');
+    
+    const radius = 65;
+    const circumference = 2 * Math.PI * radius;
+    const offset = circumference - (percent / 100) * circumference;
+    
+    circle.style.strokeDasharray = `${circumference} ${circumference}`;
+    circle.style.strokeDashoffset = offset;
+    
+    percentText.textContent = percent + '%';
+    if (message) details.textContent = message;
+}
+
+function updateMiniSteps(currentStep) {
+    document.querySelectorAll('.mini-step').forEach(el => {
+        el.classList.remove('active');
+        if (el.dataset.step === currentStep) {
+            el.classList.add('active');
+        }
+    });
+}
+
+// ============= History Management =============
+function addToHistory(item) {
+    processingHistory.unshift(item);
+    if (processingHistory.length > 10) processingHistory.pop();
+    localStorage.setItem('transvid_history', JSON.stringify(processingHistory));
+    renderHistory();
+}
+
+function renderHistory() {
+    if (processingHistory.length === 0) {
+        document.getElementById('historyCard').style.display = 'none';
+        return;
+    }
+    
+    document.getElementById('historyCard').style.display = 'block';
+    const historyList = document.getElementById('historyList');
+    historyList.innerHTML = processingHistory.map(item => `
+        <div class="history-card-vidmate">
+            <div class="history-thumbnail">
+                ${item.thumbnail ? `<img src="${item.thumbnail}" alt="">` : '<div class="thumbnail-placeholder">🎥</div>'}
+            </div>
+            <div class="history-details">
+                <h4>${item.title}</h4>
+                <p>${formatDate(item.timestamp)} • ${item.duration} min</p>
+            </div>
+        </div>
+    `).join('');
+}
+
+function clearHistory() {
+    if (confirm('Effacer tout l\'historique ?')) {
+        processingHistory = [];
+        localStorage.setItem('transvid_history', '[]');
+        renderHistory();
+        updateStats();
+        showToast('Historique effacé', 'info');
+    }
+}
+
+// ============= Stats =============
+function updateStats() {
+    document.getElementById('totalProcessed').textContent = processingHistory.length;
+    if (processingHistory.length > 0) {
+        const avgTime = (processingHistory.reduce((sum, item) => 
+            sum + parseFloat(item.duration), 0) / processingHistory.length).toFixed(1);
+        document.getElementById('avgTime').textContent = avgTime + 'm';
+    }
+}
+
+// ============= Utility Functions =============
+function toggleLogs() {
+    logsExpanded = !logsExpanded;
+    logs.style.maxHeight = logsExpanded ? '300px' : '150px';
+    document.querySelector('.btn-toggle-logs').textContent = logsExpanded ? '▲' : '▼';
+}
+
+function showToast(message, type = 'info') {
+    const container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    toast.className = `toast-vidmate toast-${type}`;
+    
+    const icons = {info: 'ℹ️', success: '✅', error: '❌', warning: '⚠️'};
+    toast.innerHTML = `<span>${icons[type]}</span><span>${message}</span>`;
+    
+    container.appendChild(toast);
+    setTimeout(() => toast.classList.add('show'), 10);
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+function resetForm() {
+    downloadSection.style.display = 'none';
+    progressSection.style.display = 'none';
+    logsContainer.style.display = 'none';
+    form.reset();
+    closePreview();
+}
+
+function getTime() {
+    return new Date().toLocaleTimeString('fr-FR', {hour: '2-digit', minute: '2-digit'});
+}
+
+function formatDuration(seconds) {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+}
+
+function formatViews(views) {
+    if (views >= 1000000) return (views / 1000000).toFixed(1) + 'M';
+    if (views >= 1000) return (views / 1000).toFixed(1) + 'K';
+    return views;
+}
+
+function formatDate(timestamp) {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffHours = (now - date) / 1000 / 3600;
+    
+    if (diffHours < 1) return 'Il y a ' + Math.floor(diffHours * 60) + ' min';
+    if (diffHours < 24) return 'Il y a ' + Math.floor(diffHours) + 'h';
+    return date.toLocaleDateString('fr-FR');
+}
+
+// ============= Initialize =============
+renderHistory();
+updateStats();
+
+// Démarrer avec le thème sombre par défaut (VidMate style)
+if (!localStorage.getItem('theme')) {
+    document.body.classList.remove('light-theme');
+    document.body.classList.add('dark-theme');
+    localStorage.setItem('theme', 'dark');
+    updateThemeIcon();
 }
 </script>
+
 </body>
 </html>
