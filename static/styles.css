@@ -475,6 +475,37 @@ body {
 /* ==================== Progress Section VidMate ==================== */
 .progress-section-vidmate {
     padding: 20px 0;
+    position: relative;
+}
+
+.btn-cancel-processing {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    background: var(--error);
+    border: none;
+    border-radius: 10px;
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    z-index: 10;
+}
+
+.btn-cancel-processing:hover:not(:disabled) {
+    background: #ff1a4a;
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(255, 61, 113, 0.4);
+}
+
+.btn-cancel-processing:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 .current-step-vidmate {
